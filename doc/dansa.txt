@@ -22,6 +22,9 @@ USAGE                                                              *dansa-usage*
 
   -- global settings.
   dansa.setup({
+    -- Specify enabled or disabled.
+    enabled = true,
+
     -- The offset to specify how much lines to use.
     scan_offset = 100,
 
@@ -78,6 +81,7 @@ TYPINGS                                                          *dansa-typings*
 
 >lua
   ---@class dansa.kit.App.Config.Schema
+  ---@field public enabled boolean|fun(): boolean
   ---@field public cutoff_count integer
   ---@field public scan_offset integer
   ---@field public default { expandtab: boolean, space: { shiftwidth: integer }, tab: { shiftwidth: integer } }
