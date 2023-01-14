@@ -1,7 +1,9 @@
 local Config = require('dansa.kit.App.Config')
 
 ---@class dansa.kit.App.Config.Schema
----@field public threshold integer
+---@field public enabled boolean|fun(): boolean
+---@field public cutoff_count integer
+---@field public scan_offset integer
 ---@field public default { expandtab: boolean, space: { shiftwidth: integer }, tab: { shiftwidth: integer } }
 
 ---@param a string
@@ -16,9 +18,11 @@ end
 
 local dansa = {
   config = Config.new({
-    threshold = 100,
+    enabled = true,
+    scan_offset = 100,
+    cutoff_count = 5,
     default = {
-      expandtab = false,
+      expandtab = true,
       space = {
         shiftwidth = 2,
       },
@@ -39,8 +43,8 @@ function dansa.guess(bufnr)
   local max_row = vim.api.nvim_buf_line_count(0)
   local lines = vim.api.nvim_buf_get_lines(
     bufnr,
-    math.max(0, cur_row - dansa.config:get().threshold - 1),
-    math.min(max_row, cur_row + dansa.config:get().threshold),
+    math.max(0, cur_row - dansa.config:get().scan_offset - 1),
+    math.min(max_row, cur_row + dansa.config:get().scan_offset),
     false
   )
 
@@ -91,7 +95,14 @@ function dansa.guess(bufnr)
       end
     end
   end
-  return guessing
+
+  local fixed_guessing = {}
+  for indent, count in pairs(guessing) do
+    if count >= dansa.config:get().cutoff_count then
+      fixed_guessing[indent] = count
+    end
+  end
+  return fixed_guessing
 end
 
 return dansa

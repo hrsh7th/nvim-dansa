@@ -1,0 +1,89 @@
+*nvim-dansa* *dansa*
+
+Guess indent from lines of around.
+
+
+
+==============================================================================
+CONTENTS                                                        *dansa-contents*
+
+USAGE                                                              |dansa-usage|
+FUNCTION                                                        |dansa-function|
+COMMAND                                                          |dansa-command|
+TYPINGS                                                          |dansa-typings|
+
+
+
+==============================================================================
+USAGE                                                              *dansa-usage*
+
+>lua
+  local dansa = require('dansa')
+
+  -- global settings.
+  dansa.setup({
+    -- The offset to specify how much lines to use.
+    scan_offset = 100,
+
+    -- The count for cut-off the indent candidate.
+    cutoff_count = 5,
+
+    -- The settings for tab-indentation or when it cannot be guessed.
+    default = {
+      expandtab = true,
+      space = {
+        shiftwidth = 2,
+      },
+      tab = {
+        shiftwidth = 4,
+      }
+    }
+  })
+
+  -- per filetype settings.
+  dansa.setup.filetype('go', {
+    default = {
+      expandtab = false,
+      tab = {
+        shiftwidth = 4,
+      }
+    }
+  })
+<
+
+
+==============================================================================
+FUNCTION                                                        *dansa-function*
+
+require('dansa').setup(config)~
+  - `config`: dansa.kit.App.Config.Schema
+    - The configuration object.
+
+require('dansa').setup.filetype(filetype, config)~
+  - `filetype`: string|string[]
+    - Specify filetype to configure.
+  - `config`: dansa.kit.App.Config.Schema
+    - The configuration object.
+
+==============================================================================
+COMMAND                                                          *dansa-command*
+
+Dansa~
+
+  Guess & apply & show applied configuration.
+
+
+==============================================================================
+TYPINGS                                                          *dansa-typings*
+
+>lua
+  ---@class dansa.kit.App.Config.Schema
+  ---@field public cutoff_count integer
+  ---@field public scan_offset integer
+  ---@field public default { expandtab: boolean, space: { shiftwidth: integer }, tab: { shiftwidth: integer } }
+<
+
+
+==============================================================================
+ vim:tw=78:ts=4:et:ft=help:norl:
+
