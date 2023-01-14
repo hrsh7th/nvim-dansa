@@ -15,8 +15,10 @@ vim.api.nvim_create_autocmd({ 'FileType' }, {
       vim.bo[0].expandtab = dansa.config:get().default.expandtab
       if dansa.config:get().default.expandtab then
         vim.bo[0].shiftwidth = dansa.config:get().default.space.shiftwidth
+        vim.bo[0].tabstop = dansa.config:get().default.space.shiftwidth
       else
         vim.bo[0].shiftwidth = dansa.config:get().default.tab.shiftwidth
+        vim.bo[0].tabstop = dansa.config:get().default.tab.shiftwidth
       end
       return
     end
@@ -32,9 +34,11 @@ vim.api.nvim_create_autocmd({ 'FileType' }, {
     if current.indent == '\t' then
       vim.bo[0].expandtab = false
       vim.bo[0].shiftwidth = dansa.config:get().default.tab.shiftwidth
+      vim.bo[0].tabstop = dansa.config:get().default.tab.shiftwidth
     else
       vim.o.expandtab = true
       vim.bo[0].shiftwidth = #current.indent
+      vim.bo[0].tabstop = #current.indent
     end
   end
 })
