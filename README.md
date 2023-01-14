@@ -19,7 +19,7 @@ dansa.setup({
       shiftwidth = 2,
     },
     tab = {
-      shifwidth = 4,
+      shiftwidth = 4,
     }
   }
 })
@@ -29,7 +29,7 @@ dansa.setup.filetype('go', {
   default = {
     expandtab = true,
     tab = {
-      shifwidth = 4,
+      shiftwidth = 4,
     }
   }
 })
