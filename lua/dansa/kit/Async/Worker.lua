@@ -1,13 +1,14 @@
 local uv = require('luv')
 local AsyncTask = require('dansa.kit.Async.AsyncTask')
 
----@class dansa.kit.Thread.WorkerOption
+---@class dansa.kit.Async.WorkerOption
 ---@field public runtimepath string[]
 
+---@class dansa.kit.Async.Worker
 local Worker = {}
 Worker.__index = Worker
 
----Create a new thread.
+---Create a new worker.
 ---@param runner function
 function Worker.new(runner)
   local self = setmetatable({}, Worker)
@@ -18,7 +19,7 @@ end
 ---Call worker function.
 ---@return dansa.kit.Async.AsyncTask
 function Worker:__call(...)
-  local args = { ... }
+  local args_ = { ... }
   return AsyncTask.new(function(resolve, reject)
     uv.new_work(function(runner, args, option)
       args = vim.mpack.decode(args)
@@ -51,7 +52,7 @@ function Worker:__call(...)
       end
     end):queue(
       self.runner,
-      vim.mpack.encode(args),
+      vim.mpack.encode(args_),
       vim.mpack.encode({
         cwd = uv.cwd(),
       })

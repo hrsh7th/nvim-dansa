@@ -75,6 +75,15 @@ Dansa~
 
   Guess & apply & show applied configuration.
 
+Dansa [style]~
+
+  Set indent to specified style.
+
+  - 8: 8space indent.
+  - 4: 4space indent.
+  - 2: 2space indent.
+  - tab: tab indent.
+
 
 ==============================================================================
 TYPINGS                                                          *dansa-typings*

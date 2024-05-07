@@ -1,8 +1,8 @@
 local kit = require('dansa.kit')
 local Async = require('dansa.kit.Async')
 
----@alias dansa.kit.Vim.Keymap.Keys { keys: string, remap: boolean }
----@alias dansa.kit.Vim.Keymap.KeysSpecifier string|{ keys: string, remap: boolean }
+---@alias dansa.kit.Vim.Keymap.Keys { keys: string, remap?: boolean }
+---@alias dansa.kit.Vim.Keymap.KeysSpecifier string|dansa.kit.Vim.Keymap.Keys
 
 ---@param keys dansa.kit.Vim.Keymap.KeysSpecifier
 ---@return dansa.kit.Vim.Keymap.Keys
@@ -22,6 +22,11 @@ Keymap._callbacks = {}
 ---@return string
 function Keymap.termcodes(keys)
   return vim.api.nvim_replace_termcodes(keys, true, true, true)
+end
+
+---Normalize keycode.
+function Keymap.normalize(s)
+  return vim.fn.keytrans(vim.keycode(s))
 end
 
 ---Set callback for consuming next typeahead.
