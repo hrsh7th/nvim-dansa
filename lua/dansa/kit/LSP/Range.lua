@@ -24,7 +24,7 @@ function Range.contains(range)
 end
 
 ---Convert range to buffer range from specified encoding.
----@param bufnr number
+---@param bufnr integer
 ---@param range dansa.kit.LSP.Range
 ---@param from_encoding? dansa.kit.LSP.PositionEncodingKind
 ---@return dansa.kit.LSP.Range

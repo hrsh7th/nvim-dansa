@@ -55,7 +55,7 @@ local function apply()
   end
 end
 
-vim.api.nvim_create_autocmd({ 'FileType' }, {
+vim.api.nvim_create_autocmd({ 'BufReadPost' }, {
   group = vim.api.nvim_create_augroup('dansa', {
     clear = true,
   }),

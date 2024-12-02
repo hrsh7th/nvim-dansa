@@ -75,8 +75,7 @@ function dansa.guess(bufnr)
 
     local in_ignored_group = false
     local groups = {}
-    groups = kit.concat(groups, Syntax.get_syntax_groups({ prev.row0, 0 }))
-    groups = kit.concat(groups, Syntax.get_syntax_groups({ curr.row0, 0 }))
+    groups = kit.concat(groups, Syntax.get_treesitter_syntax_groups({ prev.row0, 0 }))
     for _, group in ipairs(groups) do
       for _, pattern in ipairs(dansa.config:get().ignored_groups_pattern or {}) do
         if group:lower():match(pattern) then
@@ -94,7 +93,7 @@ function dansa.guess(bufnr)
         guessing['\t'] = guessing['\t'] or 0
         guessing['\t'] = guessing['\t'] + 1
       else
-        if is_prev_tab then -- tab -> space -> ?
+        if is_prev_tab then    -- tab -> space -> ?
           if lines[i + 1] then -- tab -> space -> ?
             local next = lines[i + 1]
             local next_line = next.line
