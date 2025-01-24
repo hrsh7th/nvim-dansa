@@ -47,12 +47,12 @@ function dansa.guess(bufnr)
   local max_row0 = vim.api.nvim_buf_line_count(0) - 1
   local start_row = math.max(0, cur_row0 - dansa.config:get().scan_offset - 1)
   local end_row = 1 + math.min(max_row0, cur_row0 + dansa.config:get().scan_offset)
-  local lines = kit.map(vim.api.nvim_buf_get_lines(bufnr, start_row, end_row, false), function(line, i)
+  local lines = vim.iter(ipairs(vim.api.nvim_buf_get_lines(bufnr, start_row, end_row, false))):map(function(i, line)
     return {
       row0 = start_row + i - 1,
       line = line,
     }
-  end)
+  end):totable()
 
   -- Remove blank lines.
   for i = #lines, 1, -1 do

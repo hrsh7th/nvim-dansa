@@ -67,6 +67,11 @@ end
 ---@return dansa.kit.Async.AsyncTask
 function AsyncTask.all(tasks)
   return AsyncTask.new(function(resolve, reject)
+    if #tasks == 0 then
+      resolve({})
+      return
+    end
+
     local values = {}
     local count = 0
     for i, task in ipairs(tasks) do
@@ -157,7 +162,7 @@ function AsyncTask:sync(timeout)
     if is_thread then
       uv.run('once')
     else
-      vim.wait(16)
+      vim.wait(0)
     end
   end
   if self.status == AsyncTask.Status.Pending then

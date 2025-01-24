@@ -29,13 +29,18 @@ local function apply()
   local guess = dansa.guess(0)
 
   if #vim.tbl_keys(guess) == 0 then
-    vim.bo[0].expandtab = dansa.config:get().default.expandtab
-    if dansa.config:get().default.expandtab then
-      vim.bo[0].shiftwidth = dansa.config:get().default.space.shiftwidth
-      vim.bo[0].tabstop = dansa.config:get().default.space.shiftwidth
+    local is_editorconfig = type(vim.b.editorconfig) and vim.b.editorconfig or vim.g.editorconfig or true
+    if is_editorconfig then
+      require('editorconfig').config(0)
     else
-      vim.bo[0].shiftwidth = dansa.config:get().default.tab.shiftwidth
-      vim.bo[0].tabstop = dansa.config:get().default.tab.shiftwidth
+      vim.bo[0].expandtab = dansa.config:get().default.expandtab
+      if dansa.config:get().default.expandtab then
+        vim.bo[0].shiftwidth = dansa.config:get().default.space.shiftwidth
+        vim.bo[0].tabstop = dansa.config:get().default.space.shiftwidth
+      else
+        vim.bo[0].shiftwidth = dansa.config:get().default.tab.shiftwidth
+        vim.bo[0].tabstop = dansa.config:get().default.tab.shiftwidth
+      end
     end
     return
   end
