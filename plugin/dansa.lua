@@ -31,7 +31,7 @@ local function apply()
   if #vim.tbl_keys(guess) == 0 then
     local is_editorconfig = type(vim.b.editorconfig) and vim.b.editorconfig or vim.g.editorconfig or true
     if is_editorconfig then
-      require('editorconfig').config(0)
+      require('editorconfig').config(vim.api.nvim_get_current_buf())
     else
       vim.bo[0].expandtab = dansa.config:get().default.expandtab
       if dansa.config:get().default.expandtab then
