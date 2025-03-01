@@ -1,13 +1,197 @@
 -- luacheck: ignore 512
 
+---@class dansa.kit.buffer.Buffer
+---@field put fun(data: string)
+---@field get fun(byte_size?: integer): string
+---@field len integer
+---@field skip fun(byte_size: integer)
+---@field clear fun()
+---@field reserve fun(byte_size: integer)
+---@field iter_bytes fun(): fun(): integer, integer
+
 local kit = {}
 
----Clear table.
----@param tbl table
-kit.clear = require('table.clear') or function(tbl)
-  for k, _ in pairs(tbl) do
-    tbl[k] = nil
+do
+  local buffer = package.preload['string.buffer'] and require('string.buffer')
+  if buffer then
+    ---Create buffer object.
+    ---@return dansa.kit.buffer.Buffer
+    function kit.buffer_jit()
+      local buf = buffer.new()
+      ---@type dansa.kit.buffer.Buffer
+      return setmetatable({
+        put = function(data)
+          buf:put(data)
+        end,
+        get = function(byte_size)
+          return buf:get(byte_size)
+        end,
+        len = function()
+          return select(2, buf:ref())
+        end,
+        skip = function(byte_size)
+          buf:skip(byte_size)
+        end,
+        clear = function()
+          buf:reset()
+        end,
+        reserve = function(byte_size)
+          buf:reserve(byte_size)
+        end,
+        iter_bytes = function()
+          local i = 0
+          local ptr, len = buf:ref()
+          return function()
+            if i < len then
+              local byte = ptr[i]
+              i = i + 1
+              return i, byte
+            end
+          end
+        end,
+      }, {
+        __tostring = function()
+          return buf:tostring()
+        end,
+      })
+    end
   end
+end
+
+---Create buffer object.
+---@return dansa.kit.buffer.Buffer
+function kit.buffer_tbl()
+  local buf = {}
+  ---@type dansa.kit.buffer.Buffer
+  local buffer
+  buffer = setmetatable({
+    put = function(data)
+      table.insert(buf, data)
+    end,
+    get = function(byte_size)
+      if byte_size == nil then
+        local data = table.concat(buf)
+        kit.clear(buf)
+        return data
+      end
+      if byte_size == 0 then
+        return ''
+      end
+
+      local data = {}
+      local off = 0
+      local i = 1
+      while i <= #buf do
+        local b = buf[i]
+        if off + #b >= byte_size then
+          local data_size = byte_size - off
+          if #b == data_size then
+            table.insert(data, b)
+            table.remove(buf, i)
+          else
+            table.insert(data, b:sub(1, data_size))
+            buf[i] = b:sub(data_size + 1)
+          end
+          break
+        end
+        i = i + 1
+        off = off + #b
+      end
+      return table.concat(data)
+    end,
+    len = function()
+      local len = 0
+      for _, data in ipairs(buf) do
+        len = len + #data
+      end
+      return len
+    end,
+    skip = function(byte_size)
+      buffer.get(byte_size)
+    end,
+    clear = function()
+      kit.clear(buf)
+    end,
+    reserve = function()
+      -- noop
+    end,
+    iter_bytes = function()
+      local i = 1
+      local j = 1
+      local c = 1
+      return function()
+        while i <= #buf do
+          local data = buf[i]
+          if j <= #data then
+            local byte = data:byte(j)
+            j = j + 1
+            c = c + 1
+            return (c - 1), byte
+          end
+          i = i + 1
+          j = 1
+        end
+        return nil
+      end
+    end,
+  }, {
+    __tostring = function()
+      return table.concat(buf)
+    end,
+  })
+  return buffer
+end
+
+---Create buffer object.
+---@return dansa.kit.buffer.Buffer
+kit.buffer = function()
+  return kit.buffer_jit and kit.buffer_jit() or kit.buffer_tbl()
+end
+
+do
+  local clear = package.preload['table.clear'] and require('table.clear')
+
+  ---Clear table.
+  ---@generic T: table
+  ---@param tbl T
+  ---@return T
+  kit.clear = function(tbl)
+    if type(tbl) ~= 'table' then
+      return tbl
+    end
+    if clear then
+      clear(tbl)
+    else
+      for k, _ in pairs(tbl) do
+        tbl[k] = nil
+      end
+    end
+    return tbl
+  end
+end
+
+---Check shallow equals.
+---@param a any
+---@param b any
+---@return boolean
+function kit.shallow_equals(a, b)
+  if type(a) ~= type(b) then
+    return false
+  end
+  if type(a) ~= 'table' then
+    return a == b
+  end
+  for k, v in pairs(a) do
+    if v ~= b[k] then
+      return false
+    end
+  end
+  for k, v in pairs(b) do
+    if v ~= a[k] then
+      return false
+    end
+  end
+  return true
 end
 
 ---Create gabage collection detector.

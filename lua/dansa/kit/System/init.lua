@@ -3,6 +3,11 @@
 local kit = require('dansa.kit')
 local Async = require('dansa.kit.Async')
 
+local bytes = {
+  ['\n'] = 10,
+  ['\r'] = 13,
+}
+
 local System = {}
 
 ---@class dansa.kit.System.Buffer
@@ -26,39 +31,51 @@ function System.LineBuffering.new(option)
 end
 
 ---Create LineBuffer object.
+---@param callback fun(data: string)
 function System.LineBuffering:create(callback)
-  local buffer = {}
+  local callback_wrapped = callback
+  if self.ignore_empty then
+    ---@param data string
+    function callback_wrapped(data)
+      if data:find('%g') then
+        return callback(data)
+      end
+    end
+  end
+
+  local buffer = kit.buffer()
+  ---@type dansa.kit.System.Buffer
   return {
     write = function(data)
-      data = (data:gsub('\r\n?', '\n'))
-      table.insert(buffer, data)
-
-      local has = false
-      for i = #data, 1, -1 do
-        if data:sub(i, i) == '\n' then
-          has = true
-          break
-        end
+      if data:find('\r', 1, true) then
+        data = data:gsub('\r\n?', '\n')
       end
+      buffer.put(data)
 
-      if has then
-        local texts = vim.split(table.concat(buffer, ''), '\n')
-        buffer = texts[#texts] ~= '' and { table.remove(texts) } or {}
-        for _, text in ipairs(texts) do
-          if self.ignore_empty then
-            if not text:match('^%s*$') then
-              callback(text)
-            end
-          else
-            callback(text)
+      local found = true
+      while found do
+        found = false
+        for i, byte in buffer.iter_bytes() do
+          if byte == bytes['\n'] then
+            callback_wrapped(buffer.get(i - 1))
+            buffer.skip(1)
+            found = true
+            break
           end
+        end
+        if not found then
+          break
         end
       end
     end,
     close = function()
-      if #buffer > 0 then
-        callback(table.concat(buffer, ''))
+      for byte, i in buffer.iter_bytes() do
+        if byte == bytes['\n'] then
+          callback_wrapped(buffer.get(i - 1))
+          buffer.skip(1)
+        end
       end
+      callback_wrapped(buffer.get())
     end,
   }
 end
@@ -178,48 +195,6 @@ function System.DelimiterBuffering:create(callback)
   return buffer
 end
 
----@class dansa.kit.System.PatternBuffering: dansa.kit.System.Buffering
----@field pattern string
-System.PatternBuffering = {}
-System.PatternBuffering.__index = System.PatternBuffering
-
----Create PatternBuffering.
----@param option { pattern: string }
-function System.PatternBuffering.new(option)
-  return setmetatable({
-    pattern = option.pattern,
-  }, System.PatternBuffering)
-end
-
----Create PatternBuffer object.
-function System.PatternBuffering:create(callback)
-  local buffer = {}
-  return {
-    write = function(data)
-      table.insert(buffer, data)
-      while true do
-        local text = table.concat(buffer, '')
-        local s, e = text:find(self.pattern, 1, true)
-        if s and e then
-          callback(text:sub(1, s - 1))
-          if e < #text then
-            buffer = { text:sub(e + 1) }
-          else
-            buffer = {}
-          end
-        else
-          break
-        end
-      end
-    end,
-    close = function()
-      if #buffer > 0 then
-        callback(table.concat(buffer, ''))
-      end
-    end,
-  }
-end
-
 ---@class dansa.kit.System.RawBuffering: dansa.kit.System.Buffering
 System.RawBuffering = {}
 System.RawBuffering.__index = System.RawBuffering
@@ -255,11 +230,11 @@ end
 ---@return fun(signal?: integer)
 function System.spawn(command, params)
   command = vim
-    .iter(command)
-    :filter(function(c)
-      return c ~= nil
-    end)
-    :totable()
+      .iter(command)
+      :filter(function(c)
+        return c ~= nil
+      end)
+      :totable()
 
   local cmd = command[1]
   local args = {}

@@ -25,21 +25,22 @@ local function set(is_tab, shiftwidth)
   end
 end
 
-local function apply()
-  local guess = dansa.guess(0)
+---@param bufnr integer
+local function apply(bufnr)
+  local guess = dansa.guess(bufnr)
 
   if #vim.tbl_keys(guess) == 0 then
     local is_editorconfig = type(vim.b.editorconfig) and vim.b.editorconfig or vim.g.editorconfig or true
     if is_editorconfig then
-      require('editorconfig').config(vim.api.nvim_get_current_buf())
+      require('editorconfig').config(bufnr)
     else
-      vim.bo[0].expandtab = dansa.config:get().default.expandtab
+      vim.bo[bufnr].expandtab = dansa.config:get().default.expandtab
       if dansa.config:get().default.expandtab then
-        vim.bo[0].shiftwidth = dansa.config:get().default.space.shiftwidth
-        vim.bo[0].tabstop = dansa.config:get().default.space.shiftwidth
+        vim.bo[bufnr].shiftwidth = dansa.config:get().default.space.shiftwidth
+        vim.bo[bufnr].tabstop = dansa.config:get().default.space.shiftwidth
       else
-        vim.bo[0].shiftwidth = dansa.config:get().default.tab.shiftwidth
-        vim.bo[0].tabstop = dansa.config:get().default.tab.shiftwidth
+        vim.bo[bufnr].shiftwidth = dansa.config:get().default.tab.shiftwidth
+        vim.bo[bufnr].tabstop = dansa.config:get().default.tab.shiftwidth
       end
     end
     return
@@ -60,13 +61,16 @@ local function apply()
   end
 end
 
-vim.api.nvim_create_autocmd({ 'BufReadPost' }, {
+vim.api.nvim_create_autocmd({ 'FileType' }, {
   group = vim.api.nvim_create_augroup('dansa', {
     clear = true,
   }),
   callback = function()
     if enabled() then
-      apply()
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.schedule(function()
+        apply(bufnr)
+      end)
     end
   end
 })
@@ -81,7 +85,7 @@ vim.api.nvim_create_user_command('Dansa', function(ctx)
   elseif ctx.fargs[1] == 'tab' then
     set(true, 4)
   else
-    apply()
+    apply(vim.api.nvim_get_current_buf())
   end
   vim.api.nvim_echo({
     { '[dansa]',                                'Special' },
