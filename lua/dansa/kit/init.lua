@@ -5,6 +5,7 @@
 ---@field get fun(byte_size?: integer): string
 ---@field len integer
 ---@field skip fun(byte_size: integer)
+---@field peek fun(index: integer): integer?
 ---@field clear fun()
 ---@field reserve fun(byte_size: integer)
 ---@field iter_bytes fun(): fun(): integer, integer
@@ -18,29 +19,40 @@ do
     ---@return dansa.kit.buffer.Buffer
     function kit.buffer_jit()
       local buf = buffer.new()
+      local ptr, len = buf:ref()
       ---@type dansa.kit.buffer.Buffer
       return setmetatable({
         put = function(data)
           buf:put(data)
+          ptr, len = buf:ref()
         end,
         get = function(byte_size)
-          return buf:get(byte_size)
+          local o = buf:get(byte_size)
+          ptr, len = buf:ref()
+          return o
         end,
         len = function()
-          return select(2, buf:ref())
+          return len
         end,
         skip = function(byte_size)
           buf:skip(byte_size)
+          ptr, len = buf:ref()
         end,
         clear = function()
           buf:reset()
+          ptr, len = buf:ref()
+        end,
+        peek = function(index)
+          if index < 1 or index > len then
+            return nil
+          end
+          return ptr[index - 1]
         end,
         reserve = function(byte_size)
           buf:reserve(byte_size)
         end,
         iter_bytes = function()
           local i = 0
-          local ptr, len = buf:ref()
           return function()
             if i < len then
               local byte = ptr[i]
@@ -108,6 +120,16 @@ function kit.buffer_tbl()
     end,
     skip = function(byte_size)
       buffer.get(byte_size)
+    end,
+    peek = function(index)
+      local i = 1
+      while i <= #buf do
+        if index <= #buf[i] then
+          return buf[i]:byte(index)
+        end
+        index = index - #buf[i]
+        i = i + 1
+      end
     end,
     clear = function()
       kit.clear(buf)
