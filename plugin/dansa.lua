@@ -99,6 +99,9 @@ vim.api.nvim_create_autocmd({ 'FileType' }, {
     if enabled() then
       local bufnr = vim.api.nvim_get_current_buf()
       vim.schedule(function()
+        if not vim.api.nvim_buf_is_valid(bufnr) then
+          return
+        end
         apply(bufnr)
       end)
     end
@@ -106,14 +109,15 @@ vim.api.nvim_create_autocmd({ 'FileType' }, {
 })
 
 vim.api.nvim_create_user_command('Dansa', function(ctx)
+  local buf = vim.api.nvim_get_current_buf()
   if ctx.fargs[1] == '8' then
-    set(false, 8)
+    set(buf, false, 8)
   elseif ctx.fargs[1] == '4' then
-    set(false, 4)
+    set(buf, false, 4)
   elseif ctx.fargs[1] == '2' then
-    set(false, 2)
+    set(buf, false, 2)
   elseif ctx.fargs[1] == 'tab' then
-    set(true, 4)
+    set(buf, true, 4)
   else
     apply(vim.api.nvim_get_current_buf())
   end
